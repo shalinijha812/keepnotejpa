@@ -12,6 +12,8 @@ import com.stackroute.keepnote.model.Note;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 /*
@@ -30,62 +32,81 @@ public class NoteDAOImpl implements NoteDAO {
 	/*
 	 * Autowiring should be implemented for the SessionFactory.
 	 */
-	@Autowired
-	public SessionFactory sessionFactory;
+	@PersistenceContext
+	private EntityManager em;
+
+
 
 
 //	Session sessionOne = HibernateUtil.getSessionFactory().openSession();
 //      sessionOne.beginTransaction();
-
-	public NoteDAOImpl(SessionFactory sessionFactory) {
-	this.sessionFactory=sessionFactory;
-
-	}
+public NoteDAOImpl(SessionFactory sessionFactory) {
+	this.em= sessionFactory.createEntityManager();
+}
+//	public NoteDAOImpl(SessionFactory sessionFactory) {
+//	this.sessionFactory=sessionFactory;
+//
+//	}
 
 	/*
 	 * Save the note in the database(note) table.
 	 */
-
 	public boolean saveNote(Note note) {
-		Session session=sessionFactory.getCurrentSession();
-		session.persist(note);
-		System.out.println(note);
-		session.flush();
+		em.persist(note);
 		return true;
-
 	}
+//	public boolean saveNote(Note note) {
+//		Session session=sessionFactory.getCurrentSession();
+//		session.persist(note);
+//		System.out.println(note);
+//		session.flush();
+//		return true;
+//
+//	}
 
 	/*
 	 * Remove the note from the database(note) table.
 	 */
-
 	public boolean deleteNote(int noteId) {
-		Session session=sessionFactory.getCurrentSession();
-		Note note = getNoteById(noteId);
-		session.delete(note);
-		session.flush();
+		Note note=getNoteById(noteId);
+		em.remove(note);
 		return true;
 	}
+
+//	public boolean deleteNote(int noteId) {
+//		Session session=sessionFactory.getCurrentSession();
+//		Note note = getNoteById(noteId);
+//		session.delete(note);
+//		session.flush();
+//		return true;
+//	}
 
 	/*
 	 * retrieve all existing notes sorted by created Date in descending
 	 * order(showing latest note first)
 	 */
 	public List<Note> getAllNotes() {
-		Criteria criteria=sessionFactory.getCurrentSession().createCriteria(Note.class);
-		return(List<Note>) criteria.list();
+		return em.createQuery("SELECT note FROM Note as note").getResultList();
 
 	}
+//	public List<Note> getAllNotes() {
+//		Criteria criteria=sessionFactory.getCurrentSession().createCriteria(Note.class);
+//		return(List<Note>) criteria.list();
+//
+//	}
 
 	/*
 	 * retrieve specific note from the database(note) table
 	 */
 	public Note getNoteById(int noteId) {
-		Session session=sessionFactory.getCurrentSession();
-		Note note1=session.get(Note.class,noteId);
-		session.flush();
-		return note1;
+		return em.find(Note.class,noteId);
 	}
+//	public Note getNoteById(int noteId) {
+//		Session session=sessionFactory.getCurrentSession();
+//		Note note1=session.get(Note.class,noteId);
+//		session.flush();
+//		return note1;
+//	}
 
 	/* Update existing note */
 

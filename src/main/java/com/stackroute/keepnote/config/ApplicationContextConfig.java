@@ -10,8 +10,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.Properties;
 
@@ -25,6 +29,9 @@ import java.util.Properties;
  *
  * */
 @Configuration
+//@EnableJpaRepositories(basePackages = {
+		//"com.stackroute.keepnote.config"
+//})
 @EnableTransactionManagement
 public class ApplicationContextConfig {
 
@@ -48,26 +55,40 @@ public class ApplicationContextConfig {
 	 * class through which we get sessions and perform database operations.
 	 */
 	@Bean
-	public LocalSessionFactoryBean sessionFactory(){
-		LocalSessionFactoryBean sessionFactoryBean=new LocalSessionFactoryBean();
-		sessionFactoryBean.setDataSource(dataSource());
-		sessionFactoryBean.setPackagesToScan(new String[] { "com.stackroute.keepnote.model" });
-		sessionFactoryBean.setHibernateProperties(hibernateProperties());
+	public LocalContainerEntityManagerFactoryBean entityManagerFactory(){
+		LocalContainerEntityManagerFactoryBean entityManagerFactoryBean = new LocalContainerEntityManagerFactoryBean();
+		entityManagerFactoryBean.setDataSource(dataSource());
+		entityManagerFactoryBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+		entityManagerFactoryBean.setPackagesToScan(new String[] { "com.stackroute.keepnote.model" });
+		entityManagerFactoryBean.setJpaProperties(jpaProperties());
+		//LocalSessionFactoryBean sessionFactoryBean=new LocalSessionFactoryBean();
+		//sessionFactoryBean.setDataSource(dataSource());
+		//sessionFactoryBean.setPackagesToScan(new String[] { "com.stackroute.keepnote.model" });
+		//sessionFactoryBean.setHibernateProperties(hibernateProperties());
 		//final ServiceRegistry registry = new StandardServiceRegistryBuilder().configure().build();
 		//return new MetadataSources(registry).buildMetadata().buildSessionFactory();
-		return sessionFactoryBean;
+		return entityManagerFactoryBean;
 	}
-	private Properties hibernateProperties() {
+	private Properties jpaProperties() {
 		Properties properties = new Properties();
 		properties.put("hibernate.dialect", "org.hibernate.dialect.MySQL5InnoDBDialect");
 		properties.put("hibernate.show_sql", true);
 		properties.put("hibernate.format_sql", true);
+		return properties;
+	}
+
+
+//	private Properties hibernateProperties() {
+//		Properties properties = new Properties();
+//		properties.put("hibernate.dialect", "org.hibernate.dialect.MySQL5InnoDBDialect");
+//		properties.put("hibernate.show_sql", true);
+//		properties.put("hibernate.format_sql", true);
 		//properties.put("hibernate.hbm2ddl.auto","create");
 		//properties.put("logging.level.org.hibernate.SQL",DEBUG);
 		//properties.put("logging.level.org.hibernate.type.descriptor.sql.BasicBinder",TRACE);
 		//properties.put("spring.jpa.properties.hibernate.type","trace");
-		return properties;
-	}
+//		return properties;
+//	}
 
 
 	/*
@@ -80,9 +101,16 @@ public class ApplicationContextConfig {
 	 */
 	@Bean
 	@Autowired
-	public HibernateTransactionManager transactionManager(SessionFactory s) {
-		HibernateTransactionManager txManager = new HibernateTransactionManager();
-		txManager.setSessionFactory(s);
+	public JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+		JpaTransactionManager txManager = new JpaTransactionManager();
+		txManager.setEntityManagerFactory(entityManagerFactory);
 		return txManager;
 	}
+
+
+//	public HibernateTransactionManager transactionManager(SessionFactory s) {
+//		HibernateTransactionManager txManager = new HibernateTransactionManager();
+//		txManager.setSessionFactory(s);
+//		return txManager;
+
 }
